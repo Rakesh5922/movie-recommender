@@ -9,7 +9,6 @@ import pickle
 import ast
 import requests
 import os
-import faiss
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -928,15 +927,6 @@ def load_p2():
     except:
         return None, False
 
-@st.cache_resource(show_spinner=False)
-def load_faiss():
-    try:
-        idx  = faiss.read_index('phase2/data/faiss_index.bin')
-        norm = np.load('phase2/data/tfidf_normalized.npy')
-        return idx, norm, True
-    except:
-        return None, None, False
-
 # ============================================================
 # POSTER FUNCTIONS  (unchanged)
 # ============================================================
@@ -1007,7 +997,7 @@ def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
 with st.spinner("INITIALISING NEURAL MATRIX..."):
     df1, sim1, ok1   = load_p1()
     df2, ok2         = load_p2()
-    fi, fn, ok_faiss = load_faiss()
+    fi, fn, ok_faiss = None, None, False
 
 # ============================================================
 # COMBINED TITLE LIST
@@ -1041,7 +1031,7 @@ with st.sidebar:
                           value=500, step=100, label_visibility="collapsed")
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     e1c = "sb-status-on"  if ok1              else "sb-status-off"
-    e2c = "sb-status-on"  if ok2 and ok_faiss else "sb-status-off"
+    e2c = "sb-status-off"
     st.markdown(f"""
     <div class="sb-status-row">
         <div class="sb-status {e1c}">{'●' if ok1 else '○'} COSINE</div>
@@ -1128,10 +1118,10 @@ if st.session_state.last_movie:
             if not m.empty:
                 res, src = rec_p1(movie, n_recs, year_range, df1, sim1)
                 eng = "phase1"
-        if res is None and ok2 and ok_faiss:
+        if res is None and ok2:
             m = df2[df2['title'].str.lower() == movie.lower()]
             if not m.empty:
-                res, src = rec_p2(movie, n_recs, min_votes, year_range, df2, fi, fn)
+                #res, src = rec_p2(movie, n_recs, min_votes, year_range, df2, fi, fn)
                 eng = "phase2"
 
     if res is None or src is None:
