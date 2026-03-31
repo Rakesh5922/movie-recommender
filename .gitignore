@@ -1,0 +1,26 @@
+# Large model files
+cosine_sim.pkl
+movie_df.pkl
+
+# Large data files
+tmdb_merged.csv
+tmdb_5000_credits.csv
+TMDB_movie_dataset_v11.csv
+TMDB_movie_dataset_v11.zip
+
+# Python cache
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# Environment
+.env
+
+# Posters
+posters/
+
+TMDB_movie_dataset_v11.csv
+tfidf_normalized.npy
+tfidf_sparse.npz
+svd_model.pkl
+faiss_index.bin
