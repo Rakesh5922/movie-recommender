@@ -899,7 +899,7 @@ PLACEHOLDER = "https://placehold.co/500x750/06060f/1a1a2e?text=🎬"
 @st.cache_data(show_spinner=False)
 def load_p1():
     try:
-        df = pd.read_csv('phase1/tmdb_features.csv')
+        df = pd.read_csv("https://drive.google.com/uc?id=16yOpEE7M8gbdb81IWYgm7pUpXNJ1LQRR")
         def tl(x):
             try: return ast.literal_eval(x)
             except: return []
@@ -917,7 +917,7 @@ def load_p1():
 @st.cache_data(show_spinner=False)
 def load_p2():
     try:
-        df = pd.read_csv('phase2/data/tmdb_phase2_features.csv')
+        df = pd.read_csv("https://drive.google.com/uc?id=1QvmvfDxTjAbQxSdJBrutPkUNQuz4tviT")
         def tl(x):
             try: return ast.literal_eval(x)
             except: return []
