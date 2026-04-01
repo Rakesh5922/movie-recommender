@@ -11,6 +11,10 @@ import requests
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import base64
+def get_base64(file):
+    with open(file, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 # ============================================================
 # PAGE CONFIG
@@ -25,8 +29,9 @@ st.set_page_config(
 # ============================================================
 # CSS
 # ============================================================
+img = get_base64("background_image.png")
 st.markdown(
-    """
+    f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap');
 
@@ -34,7 +39,7 @@ st.markdown(
    DARK THEME VARIABLES (default)
 ════════════════════════════ */
 :root {
-    --bg-url: url("background_image.png");
+    --bg-url: url("data:image/png;base64,{img}");
     --surface:    rgba(255,255,255,0.030);
     --surface2:   rgba(255,255,255,0.055);
     --border:     rgba(255,255,255,0.07);
