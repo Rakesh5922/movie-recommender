@@ -11,6 +11,10 @@ import requests
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import base64
+def get_base64(file):
+    with open(file, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 # ============================================================
 # PAGE CONFIG
@@ -29,13 +33,24 @@ img = get_base64("background_image.png")
 st.markdown(
     f"""
     <style>
+    .stApp {{
+        background-image: url("data:image/png;base64,{img}");
+        background-size: cover;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown(
+    """
+    <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap');
 
 /* ════════════════════════════
    DARK THEME VARIABLES (default)
 ════════════════════════════ */
 :root {
-    --bg-url: url("background_image.png");
+    --bg-url: none;
     --surface:    rgba(255,255,255,0.030);
     --surface2:   rgba(255,255,255,0.055);
     --border:     rgba(255,255,255,0.07);
@@ -64,7 +79,7 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background-image: var(--bg-url) !important;
+    background-image: none !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
