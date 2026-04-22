@@ -9,9 +9,12 @@ import pickle
 import ast
 import requests
 import os
-import faiss
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import base64
+def get_base64(file):
+    with open(file, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 # ============================================================
 # PAGE CONFIG
@@ -26,6 +29,21 @@ st.set_page_config(
 # ============================================================
 # CSS
 # ============================================================
+img = get_base64("background_image.png")
+st.markdown(f"""
+    <style>
+    .stApp {{
+    background:
+        linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)),
+        url("data:image/png;base64,{img}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 st.markdown(
     """
     <style>
@@ -35,24 +53,24 @@ st.markdown(
    DARK THEME VARIABLES (default)
 ════════════════════════════ */
 :root {
-    --bg-url: url("background_image.png");
-    --surface:    rgba(255,255,255,0.030);
-    --surface2:   rgba(255,255,255,0.055);
-    --border:     rgba(255,255,255,0.07);
-    --text:       #c8d6e8;
-    --text-dim:   #4a5a6a;
-    --text-mid:   #7a90a8;
-    --red:        #E50914;
-    --red-glow:   rgba(229,9,20,0.22);
+    --bg-url: none;
+    --surface:    rgba(0,0,0,0.45);
+    --surface2:   rgba(0,0,0,0.65);
+    --card-bg:    rgba(0,0,0,0.55);
+    --border:     rgba(200,150,10,0.15);  
+    --red:        #c8960a;                      
+    --red-glow:   rgba(200,150,10,0.22);
     --cyan:       #00e5ff;
     --cyan-glow:  rgba(0,229,255,0.18);
     --purple:     #bf00ff;
     --gold:       #ffd700;
-    --card-bg:    rgba(255,255,255,0.035);
-    --card-border:rgba(255,255,255,0.065);
-    --panel-bg:   rgba(10,10,22,0.97);
-    --sb-bg:      #06060f;
-    --ticker-fade:#03030a;
+    --text:       #E6EDF3;
+    --text-dim:   #9BAAC0;
+    --text-mid:   #6B7C93;
+    --card-border:rgba(200,150,10,0.12);    
+    --panel-bg:   rgba(6,14,12,0.97);           
+    --sb-bg:      #0b1a16;                      
+    --ticker-fade:transparent;                 
 }
 
 /* ════════════════════════════
@@ -64,7 +82,6 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background-image: var(--bg-url) !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
@@ -75,28 +92,28 @@ html, body, [class*="css"] {
     content: '';
     position: fixed; inset: 0;
     background:
-        radial-gradient(ellipse 120% 60% at 50% -20%, rgba(229,9,20,0.20) 0%, transparent 65%),
-        radial-gradient(ellipse 70%  50% at 100% 100%, rgba(0,229,255,0.09) 0%, transparent 55%),
-        radial-gradient(ellipse 60%  40% at -10%  80%, rgba(191,0,255,0.08) 0%, transparent 55%);
+        radial-gradient(ellipse 120% 60% at 50% -20%, rgba(200,150,10,0.18) 0%, transparent 65%),
+        radial-gradient(ellipse 70%  50% at 100% 100%, rgba(0,229,255,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 60%  40% at -10%  80%, rgba(160,110,10,0.10) 0%, transparent 55%);
     pointer-events: none; z-index: 0;
     animation: auroraShift 14s ease-in-out infinite alternate;
-    opacity: 0.4;
+    opacity: 0.08;
 }
 .stApp::after {
     content: '';
     position: fixed;
     bottom: 0; left: -20%; right: -20%; height: 55vh;
     background:
-        linear-gradient(transparent 0%, rgba(229,9,20,0.04) 100%),
+        linear-gradient(transparent 0%, rgba(200,150,10,0.05) 100%),
         repeating-linear-gradient(90deg, transparent, transparent calc(6vw - 1px),
-            rgba(229,9,20,0.06) calc(6vw - 1px), rgba(229,9,20,0.06) calc(6vw)),
+            rgba(200,150,10,0.07) calc(6vw - 1px), rgba(200,150,10,0.07) calc(6vw)),
         repeating-linear-gradient(180deg, transparent, transparent calc(4vh - 1px),
-            rgba(229,9,20,0.04) calc(4vh - 1px), rgba(229,9,20,0.04) calc(4vh));
+            rgba(200,150,10,0.05) calc(4vh - 1px), rgba(200,150,10,0.05) calc(4vh));
     transform: perspective(400px) rotateX(45deg);
     transform-origin: bottom center;
     pointer-events: none; z-index: 0; opacity: 0.55;
     animation: gridPulse 7s ease-in-out infinite;
-    opacity: 0.2;
+    opacity: 0.05;
 }
 
 /* ── CRT scanlines ── */
@@ -107,7 +124,7 @@ html, body, [class*="css"] {
         0deg, transparent, transparent 3px,
         rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
     );
-    pointer-events: none; z-index: 9997; opacity: 0.25;
+    pointer-events: none; z-index: 9997; opacity: 0.05;
     transition: opacity 0.4s ease;
 }
 
@@ -125,8 +142,8 @@ html, body, [class*="css"] {
 @keyframes subFade  { from{opacity:0;transform:translateY(14px);filter:blur(4px);} to{opacity:1;transform:none;filter:none;} }
 @keyframes lineExp  { from{transform:scaleX(0);opacity:0;} to{transform:scaleX(1);opacity:1;} }
 @keyframes redPulse {
-    0%,100%{text-shadow:0 0 8px var(--red),0 0 24px rgba(229,9,20,.55),0 0 55px rgba(229,9,20,.22);}
-    50%    {text-shadow:0 0 4px var(--red),0 0 14px rgba(229,9,20,.35);}
+    0%,100%{text-shadow:0 0 8px var(--red),0 0 24px rgba(200,150,10,.55),0 0 55px rgba(200,150,10,.22);}
+    50%    {text-shadow:0 0 4px var(--red),0 0 14px rgba(200,150,10,.35);}
 }
 @keyframes holoPan   { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
 @keyframes bMarch    { 0%{background-position:0%;} 100%{background-position:200%;} }
@@ -183,7 +200,7 @@ html, body, [class*="css"] {
     animation: ticker 32s linear infinite;
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.70rem; letter-spacing: 3px;
-    color: rgba(229,9,20,0.55); text-transform: uppercase;
+    color: rgba(200,150,10,0.72); text-transform: uppercase;
 }
 .ticker-sep { margin: 0 20px; color: rgba(0,229,255,0.30); }
 
@@ -197,7 +214,7 @@ html, body, [class*="css"] {
 .arc1 {
     position:absolute; top:50%; left:50%;
     width:600px; height:600px;
-    border:1px solid rgba(229,9,20,0.05); border-radius:50%;
+    border:1px solid rgba(200,150,10,0.10); border-radius:50%;
     animation: spin3d  42s linear infinite; pointer-events:none;
 }
 .arc2 {
@@ -209,7 +226,7 @@ html, body, [class*="css"] {
 .hero-eyebrow {
     font-family:'Share Tech Mono',monospace;
     font-size:.70rem; letter-spacing:6px; text-transform:uppercase;
-    color:rgba(229,9,20,0.72); margin-bottom:12px;
+    color:rgba(200,150,10,0.82); margin-bottom:12px;
     animation: subFade .7s ease both;
 }
 .hero-eyebrow span { color:rgba(0,229,255,0.45); margin:0 8px; }
@@ -223,7 +240,7 @@ html, body, [class*="css"] {
     font-family:'Bebas Neue',sans-serif;
     font-size: clamp(3.8rem,9vw,8rem);
     letter-spacing:-2px; line-height:.9; display:inline-block;
-    background: linear-gradient(135deg,#00e5ff 0%,#bf00ff 50%,#00e5ff 100%);
+    background: linear-gradient(135deg,#ffd700 0%,#c8960a 40%,#ffd700 70%,#e8b830 100%);
     background-size:200% 100%;
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     animation: titleSlam 1.1s cubic-bezier(.16,1,.3,1) .2s both, holoPan 4s linear 1.5s infinite;
@@ -237,7 +254,7 @@ html, body, [class*="css"] {
 .hero-subtitle {
     font-family:'Barlow Condensed',sans-serif;
     font-size:1.0rem; letter-spacing:6px; text-transform:uppercase;
-    color:rgba(200,214,232,0.40);
+    color:rgba(230,237,243,0.75);
     animation: subFade .8s ease .9s both;
 }
 
@@ -246,7 +263,9 @@ html, body, [class*="css"] {
 ════════════════════════════ */
 .stat-card {
     position:relative;
-    background:var(--surface);
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.08);
     border:1px solid var(--border); border-radius:4px;
     padding:20px 14px 16px; text-align:center; overflow:hidden;
     transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
@@ -259,7 +278,7 @@ html, body, [class*="css"] {
 }
 .stat-card::before {
     content:''; position:absolute; top:0; left:0; right:0; height:2px;
-    background: linear-gradient(90deg,transparent,var(--sc,#E50914),transparent);
+    background: linear-gradient(90deg,transparent,var(--sc,#c8960a),transparent);
     background-size:200%; animation:bMarch 3s linear infinite;
 }
 .stat-card::after {
@@ -269,8 +288,8 @@ html, body, [class*="css"] {
 }
 .stat-number {
     font-family:'Bebas Neue',sans-serif; font-size:2.6rem; line-height:1;
-    color:var(--sc,#E50914); display:block;
-    text-shadow:0 0 18px var(--sc,#E50914);
+    color:var(--sc,#c8960a); display:block;
+    text-shadow:0 0 8px rgba(200,150,10,0.45);
     animation:blink 4s ease-in-out infinite; animation-delay:var(--sd,0s);
 }
 .stat-label {
@@ -283,10 +302,10 @@ html, body, [class*="css"] {
 ════════════════════════════ */
 .search-frame {
     position:relative;
-    background:linear-gradient(135deg,rgba(229,9,20,.055),rgba(0,229,255,.03),rgba(191,0,255,.03));
-    border:1px solid rgba(229,9,20,.22); border-radius:6px;
+    background:linear-gradient(135deg,rgba(200,150,10,.055),rgba(0,229,255,.03),rgba(200,150,10,.02));
+    border:1px solid rgba(200,150,10,.28);
     padding:22px 28px 18px; margin:0 0 28px;
-    box-shadow:0 0 50px rgba(229,9,20,.07), inset 0 1px 0 rgba(255,255,255,.05);
+    box-shadow:0 0 50px rgba(200,150,10,.09), inset 0 1px 0 rgba(255,215,0,.04);
 }
 .search-frame::before {
     content:''; position:absolute; top:-1px; left:-1px; width:20px; height:20px;
@@ -295,8 +314,8 @@ html, body, [class*="css"] {
 }
 .search-frame::after {
     content:''; position:absolute; bottom:-1px; right:-1px; width:20px; height:20px;
-    border-bottom:2px solid var(--red); border-right:2px solid var(--red);
-    border-radius:0 0 2px 0; box-shadow:2px 2px 8px rgba(229,9,20,.35);
+    border-bottom:2px solid #c8960a; border-right:2px solid #c8960a;
+    border-radius:0 0 2px 0; box-shadow:2px 2px 8px rgba(200,150,10,.40);
 }
 .search-label {
     font-family:'Share Tech Mono',monospace; font-size:.70rem;
@@ -317,15 +336,17 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 
 /* primary button */
 .stButton > button[kind="primary"] {
-    background:linear-gradient(135deg,#E50914,#9b0000) !important;
-    border:1px solid rgba(229,9,20,.50) !important; border-radius:4px !important;
+    background:linear-gradient(135deg,#d4a012,#8a6008) !important;
+    border:1px solid rgba(200,150,10,.55) !important;
+    border-radius:4px !important;
     font-family:'Bebas Neue',sans-serif !important; font-size:1.1rem !important;
     letter-spacing:3px !important; color:#fff !important; height:46px !important;
-    box-shadow:0 0 18px rgba(229,9,20,.38) !important; transition:all .2s ease !important;
+    box-shadow:0 0 18px rgba(200,150,10,.40) !important;
+    transition:all .2s ease !important;
 }
 .stButton > button[kind="primary"]:hover {
-    background:linear-gradient(135deg,#ff1a2a,#E50914) !important;
-    box-shadow:0 0 38px rgba(229,9,20,.65),0 0 70px rgba(229,9,20,.25) !important;
+    background:linear-gradient(135deg,#ffd700,#c8960a) !important;
+    box-shadow:0 0 38px rgba(200,150,10,.65),0 0 70px rgba(200,150,10,.25) !important;
     transform:translateY(-2px) !important;
 }
 .stButton > button[kind="primary"]:active { transform:translateY(0) !important; }
@@ -349,7 +370,7 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 }
 .section-hdr-line {
     flex:1; height:1px;
-    background:linear-gradient(90deg,rgba(229,9,20,.40),rgba(0,229,255,.15),transparent);
+    background:linear-gradient(90deg,rgba(200,150,10,.45),rgba(0,229,255,.12),transparent);
 }
 .section-hdr-count {
     font-family:'Share Tech Mono',monospace; font-size:.62rem;
@@ -362,43 +383,43 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 .source-panel {
     position:relative;
     background:var(--panel-bg);
-    border:1px solid rgba(229,9,20,.18); border-radius:6px;
+    border:1px solid rgba(200,150,10,.20); border-radius:6px;
     padding:28px; margin:10px 0 6px; overflow:hidden;
     box-shadow:0 25px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
     transition:box-shadow .4s ease;
 }
 .source-panel:hover {
-    box-shadow:0 30px 90px rgba(0,0,0,.65),0 0 50px rgba(229,9,20,.10),
+    box-shadow:0 30px 90px rgba(0,0,0,.65),0 0 50px rgba(200,150,10,.12),
                inset 0 1px 0 rgba(255,255,255,.06);
 }
 .source-panel::before {
     content:''; position:absolute; top:0; left:0; width:3px; height:100%;
-    background:linear-gradient(180deg,var(--red),var(--purple),var(--cyan));
-    border-radius:6px 0 0 6px; box-shadow:0 0 12px var(--red);
+    background:linear-gradient(180deg,#ffd700,#c8960a,var(--cyan));
+    border-radius:6px 0 0 6px; box-shadow:0 0 12px rgba(200,150,10,.60);
 }
 .source-panel::after {
     content:'NOW PLAYING';
     position:absolute; top:50%; right:-18px;
     transform:translateY(-50%) rotate(90deg);
     font-family:'Bebas Neue',sans-serif; font-size:4.5rem;
-    color:rgba(229,9,20,.025); letter-spacing:8px;
+    color:rgba(200,150,10,.025); letter-spacing:8px;
     pointer-events:none; user-select:none; white-space:nowrap;
 }
 
 .poster-container {
     position:relative; border-radius:6px; overflow:hidden;
-    box-shadow:0 0 0 1px rgba(229,9,20,.15),0 18px 50px rgba(0,0,0,.75),
-               0 0 35px rgba(229,9,20,.20);
+    box-shadow:0 0 0 1px rgba(200,150,10,.18),0 18px 50px rgba(0,0,0,.75),
+               0 0 35px rgba(200,150,10,.22);
     transition:box-shadow .4s ease;
 }
 .source-panel:hover .poster-container {
-    box-shadow:0 0 0 1px rgba(229,9,20,.28),0 22px 65px rgba(0,0,0,.85),
-               0 0 50px rgba(229,9,20,.28);
+    box-shadow:0 0 0 1px rgba(200,150,10,.18),0 22px 65px rgba(0,0,0,.85),
+               0 0 50px rgba(200,150,10,.22);
 }
 .poster-container img { width:100%; border-radius:6px; display:block; }
 .poster-glow {
     position:absolute; bottom:-14px; left:50%; transform:translateX(-50%);
-    width:80%; height:22px; background:rgba(229,9,20,.28);
+    width:80%; height:22px; background:rgba(200,150,10,.30);
     filter:blur(16px); border-radius:50%; pointer-events:none;
 }
 
@@ -451,7 +472,9 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 ════════════════════════════ */
 .movie-card {
     position:relative;
-    background:var(--card-bg); border:1px solid var(--card-border);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    border:1px solid var(--card-border);
     border-radius:6px; overflow:hidden; margin-bottom:6px;
     /* transform applied by tilt JS; transition only for non-tilt props */
     transition: border-color .3s ease, box-shadow .3s ease;
@@ -470,14 +493,14 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 .movie-card::after {
     content:''; position:absolute; inset:-1px; border-radius:6px;
     opacity:0; transition:opacity .3s ease; pointer-events:none; z-index:3;
-    background:linear-gradient(135deg,rgba(229,9,20,.10),rgba(0,229,255,.05));
-    box-shadow:inset 0 0 0 1px rgba(229,9,20,.22);
+    background:linear-gradient(135deg,rgba(200,150,10,.10),rgba(0,229,255,.05));
+box-shadow:inset 0 0 0 1px rgba(200,150,10,.25);
 }
 .movie-card:hover::after { opacity:1; }
 .movie-card:hover {
-    border-color:rgba(229,9,20,.40);
-    box-shadow:0 20px 50px rgba(0,0,0,.70),0 0 22px rgba(229,9,20,.22),
-               0 0 0 1px rgba(229,9,20,.18);
+    border-color:rgba(200,150,10,.45);
+    box-shadow:0 20px 50px rgba(0,0,0,.70),0 0 22px rgba(200,150,10,.25)),
+               0 0 0 1px rgba(200,150,10,.18);
     z-index:10;
 }
 
@@ -608,17 +631,17 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 ════════════════════════════ */
 section[data-testid="stSidebar"] {
     background:linear-gradient(180deg,var(--sb-bg),#08080f) !important;
-    border-right:1px solid rgba(229,9,20,.10) !important;
+    border-right:1px solid rgba(200,150,10,.15) !important;
     transition:background .4s ease;
 }
 section[data-testid="stSidebar"]::after {
     content:''; position:absolute; top:0; right:-1px; width:1px; height:100%;
-    background:linear-gradient(180deg,rgba(229,9,20,.40),rgba(0,229,255,.20),transparent);
+    background:linear-gradient(180deg,rgba(200,150,10,.45),rgba(0,229,255,.20),transparent);
     pointer-events:none;
 }
 .sb-brand {
     font-family:'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:4px;
-    background:linear-gradient(90deg,var(--red),#ff6b35);
+    background:linear-gradient(90deg,#ffd700,#c8960a);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     display:block; line-height:1; animation:redPulse 4s ease-in-out infinite;
 }
@@ -628,7 +651,7 @@ section[data-testid="stSidebar"]::after {
 }
 .sb-divider {
     height:1px; margin:12px 0;
-    background:linear-gradient(90deg,rgba(229,9,20,.30),rgba(0,229,255,.10),transparent);
+    background:linear-gradient(90deg,rgba(200,150,10,.35),rgba(0,229,255,.10),transparent);
 }
 .sb-label {
     font-family:'Share Tech Mono',monospace; font-size:.60rem;
@@ -900,7 +923,7 @@ PLACEHOLDER = "https://placehold.co/500x750/06060f/1a1a2e?text=🎬"
 @st.cache_data(show_spinner=False)
 def load_p1():
     try:
-        df = pd.read_csv('phase1/tmdb_features.csv')
+        df = pd.read_csv("https://drive.google.com/uc?id=16yOpEE7M8gbdb81IWYgm7pUpXNJ1LQRR")
         def tl(x):
             try: return ast.literal_eval(x)
             except: return []
@@ -918,7 +941,7 @@ def load_p1():
 @st.cache_data(show_spinner=False)
 def load_p2():
     try:
-        df = pd.read_csv('phase2/data/tmdb_phase2_features.csv')
+        df = pd.read_csv("https://drive.google.com/uc?id=1QvmvfDxTjAbQxSdJBrutPkUNQuz4tviT")
         def tl(x):
             try: return ast.literal_eval(x)
             except: return []
@@ -927,15 +950,6 @@ def load_p2():
         return df, True
     except:
         return None, False
-
-@st.cache_resource(show_spinner=False)
-def load_faiss():
-    try:
-        idx  = faiss.read_index('phase2/data/faiss_index.bin')
-        norm = np.load('phase2/data/tfidf_normalized.npy')
-        return idx, norm, True
-    except:
-        return None, None, False
 
 # ============================================================
 # POSTER FUNCTIONS  (unchanged)
@@ -980,7 +994,6 @@ def rec_p1(title, n, year_range, df, sim):
                             str(int(r['release_year'])) if pd.notna(r['release_year']) else ""),
         axis=1)
     return res, df.iloc[idx]
-
 def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
     m = df[df['title'].str.lower() == title.lower()]
     if m.empty: return None, None
@@ -989,7 +1002,8 @@ def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
     dists, inds = idx_faiss.search(qv, 150)
     res = df.iloc[inds[0][1:]][
         ['movie_id','title','weighted_rating','vote_count',
-         'release_date','genres_list','original_language','poster_path']
+         'release_date','genres_list','original_language','homepage',
+         'poster_path']
     ].copy()
     res['similarity'] = dists[0][1:].round(3)
     res['year']       = pd.to_datetime(res['release_date'], errors='coerce').dt.year
@@ -998,7 +1012,7 @@ def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
     mv  = res['vote_count'].max() if len(res) > 0 else 1
     res['final_score'] = (res['similarity'] * 0.7 + res['vote_count'] / max(mv, 1) * 0.3)
     res = res.sort_values('final_score', ascending=False).head(n).reset_index(drop=True)
-    res['poster'] = res['poster_path'].apply(poster_p2)
+    res['poster'] = res['homepage'+'poster_path'].apply(poster_p2)
     return res, df.iloc[midx]
 
 # ============================================================
@@ -1007,17 +1021,17 @@ def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
 with st.spinner("INITIALISING NEURAL MATRIX..."):
     df1, sim1, ok1   = load_p1()
     df2, ok2         = load_p2()
-    fi, fn, ok_faiss = load_faiss()
+    fi, fn, ok_faiss = None, None, False
 
 # ============================================================
 # COMBINED TITLE LIST
 # ============================================================
-all_titles = []
-if ok1: all_titles += df1['title'].dropna().tolist()
+searchable_titles = set()
+if ok1:
+    searchable_titles.update(df1['title'].str.lower())
 if ok2:
-    p1set       = set(all_titles)
-    all_titles += [t for t in df2['title'].dropna().tolist() if t not in p1set]
-all_titles = sorted(set(all_titles))
+    searchable_titles.update(df2['title'].str.lower())
+all_titles = sorted(searchable_titles)
 
 # ============================================================
 # SIDEBAR
@@ -1041,7 +1055,7 @@ with st.sidebar:
                           value=500, step=100, label_visibility="collapsed")
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     e1c = "sb-status-on"  if ok1              else "sb-status-off"
-    e2c = "sb-status-on"  if ok2 and ok_faiss else "sb-status-off"
+    e2c = "sb-status-off"
     st.markdown(f"""
     <div class="sb-status-row">
         <div class="sb-status {e1c}">{'●' if ok1 else '○'} COSINE</div>
@@ -1128,10 +1142,10 @@ if st.session_state.last_movie:
             if not m.empty:
                 res, src = rec_p1(movie, n_recs, year_range, df1, sim1)
                 eng = "phase1"
-        if res is None and ok2 and ok_faiss:
+        if res is None and ok2:
             m = df2[df2['title'].str.lower() == movie.lower()]
             if not m.empty:
-                res, src = rec_p2(movie, n_recs, min_votes, year_range, df2, fi, fn)
+                #res, src = rec_p2(movie, n_recs, min_votes, year_range, df2, fi, fn)
                 eng = "phase2"
 
     if res is None or src is None:
@@ -1151,7 +1165,7 @@ if st.session_state.last_movie:
 
         with c1:
             if eng == "phase2":
-                p = poster_p2(src.get('poster_path', ''))
+                p = poster_p2(src.get('homepage'+'poster_path', ''))
             else:
                 try:
                     yr = str(int(src['release_year'])) if pd.notna(src['release_year']) else ""
@@ -1310,7 +1324,7 @@ for tab, genre in zip(tabs, top_genres):
                 except: yr = ""
                 combined_movies.append({
                     'title': row['title'], 'weighted_rating': row['weighted_rating'],
-                    'year': yr, 'poster': poster_p2(row.get('poster_path', '')), 'source': 'P2'
+                    'year': yr, 'poster': poster_p2(row.get('homepage'+'poster_path', '')), 'source': 'P2'
                 })
 
         combined_df = pd.DataFrame(combined_movies)
