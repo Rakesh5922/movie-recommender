@@ -1,4 +1,4 @@
-# 🎬 CineMatch — Movie Recommendation System
+# CineMatch — Movie Recommendation System
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.32-red)
@@ -8,18 +8,14 @@
 > A content-based movie recommendation system built on the 
 > TMDB 5000 dataset — deployed as a live interactive web app!
 
-## 🚀 Live Demo
-👉 (http://localhost:8501/#browse-top-movies-by-genre)**
-
----
+##  Live Demo
+(https://movie-recommender-nngwuk6maziystb4wgrkny.streamlit.app)**
 
 ## 📸 Screenshots
 
-> *(We will add screenshots after deployment)*
-
 ---
 
-## 🧠 How It Works
+##  How It Works
 ```
 User selects a movie
         ↓
@@ -48,7 +44,7 @@ Top 10 recommendations displayed with posters!
 
 ---
 
-## 📊 Dataset
+##  Dataset
 
 - **Source:** [TMDB 5000 Movie Dataset](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata)
 - **Size:** 4,800 movies
@@ -56,12 +52,12 @@ Top 10 recommendations displayed with posters!
 
 ---
 
-## 🔧 Run Locally
+##  Run Locally
 ```bash
 # Clone the repo
 git clone https://github.com/Rakesh599/movie-recommender.git
 
-# Go into folder
+# Go into the folder
 cd movie-recommender
 
 # Install libraries
@@ -73,7 +69,7 @@ streamlit run app.py
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```
 movie-recommender/
 │
@@ -85,10 +81,9 @@ movie-recommender/
 ├── requirements.txt       ← Dependencies
 └── README.md              ← You are here!
 ```
-
 ---
 
-## 🎯 Key Learnings
+## Key Learnings
 
 - Real-world JSON parsing from CSV columns
 - TF-IDF vectorization for text similarity
@@ -97,13 +92,8 @@ movie-recommender/
 - End-to-end ML project deployment
 
 ---
-
-## 👨‍💻 Author
+##  Author
 
 **YOUR NAME**
 - GitHub: https://github.com/Rakesh599
 - LinkedIn:http://linkedin.in/rakesh-vallepu
-
----
-
-⭐ If you found this useful, please star the repo!
