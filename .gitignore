@@ -24,3 +24,21 @@ tfidf_normalized.npy
 tfidf_sparse.npz
 svd_model.pkl
 faiss_index.bin
+
+
+
+
+
+# Large model files — host these elsewhere
+phase2/data/faiss_index.bin
+phase2/data/tfidf_normalized.npy
+phase2/data/tfidf_sparse.npz
+phase2/data/svd_model.pkl
+phase2/data/tfidf_vectorizer_p2.pkl
+phase2/data/tmdb_phase2_features.csv
+data/cosine_sim.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+.streamlit/secrets.toml

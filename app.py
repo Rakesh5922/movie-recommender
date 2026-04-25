@@ -9,6 +9,7 @@ import pickle
 import ast
 import requests
 import os
+import gdown
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import base64
@@ -34,7 +35,7 @@ st.markdown(f"""
     <style>
     .stApp {{
     background:
-        linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)),
+        linear-gradient(rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
         url("data:image/png;base64,{img}");
     background-size: cover;
     background-position: center;
@@ -54,7 +55,7 @@ st.markdown(
 ════════════════════════════ */
 :root {
     --bg-url: none;
-    --surface:    rgba(0,0,0,0.45);
+    --surface:    rgba(0,0,0,0.35);
     --surface2:   rgba(0,0,0,0.65);
     --card-bg:    rgba(0,0,0,0.55);
     --border:     rgba(200,150,10,0.15);  
@@ -310,12 +311,12 @@ html, body, [class*="css"] {
 .search-frame::before {
     content:''; position:absolute; top:-1px; left:-1px; width:20px; height:20px;
     border-top:2px solid var(--cyan); border-left:2px solid var(--cyan);
-    border-radius:2px 0 0 0; box-shadow:-2px -2px 8px rgba(0,229,255,.35);
+    border-radius:2px 0 0 0; box-shadow:-2px -2px 6px rgba(0,229,255,.35);
 }
 .search-frame::after {
     content:''; position:absolute; bottom:-1px; right:-1px; width:20px; height:20px;
     border-bottom:2px solid #c8960a; border-right:2px solid #c8960a;
-    border-radius:0 0 2px 0; box-shadow:2px 2px 8px rgba(200,150,10,.40);
+    border-radius:0 0 2px 0; box-shadow:2px 2px 6px rgba(200,150,10,.40);
 }
 .search-label {
     font-family:'Share Tech Mono',monospace; font-size:.70rem;
@@ -325,9 +326,15 @@ html, body, [class*="css"] {
 
 /* selectbox */
 div[data-testid="stSelectbox"] > div > div {
-    background:rgba(0,0,0,.50) !important; border:1px solid rgba(229,9,20,.20) !important;
-    border-radius:4px !important; color:var(--text) !important;
-    font-family:'Barlow Condensed',sans-serif !important; font-size:1.05rem !important;
+    background:rgba(0,0,0,.90) !important; border:3px solid rgba(8,133,161,0.7) !important;
+    border-radius:40px !important; color:var(--text) !important;height:100% !important;
+    font-family:'Barlow Condensed',sans-serif !important; font-size:20px !important;
+    padding:0 18px !important; margin-top:0px !important;
+    display:flex !important; align-items:center !important; min-height:46px !important;
+}
+div[data-testid="stSelectbox"] > div > div > div {
+    padding:0 !important; margin:0 !important;
+    display:flex !important; align-items:center !important;
 }
 div[data-testid="stSelectbox"] > div > div:focus-within {
     border-color:rgba(0,229,255,.40) !important;
@@ -337,8 +344,8 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 /* primary button */
 .stButton > button[kind="primary"] {
     background:linear-gradient(135deg,#d4a012,#8a6008) !important;
-    border:1px solid rgba(200,150,10,.55) !important;
-    border-radius:4px !important;
+    border:5px solid rgba(200,150,10,.55) !important;
+    border-radius:35px !important;
     font-family:'Bebas Neue',sans-serif !important; font-size:1.1rem !important;
     letter-spacing:3px !important; color:#fff !important; height:46px !important;
     box-shadow:0 0 18px rgba(200,150,10,.40) !important;
@@ -483,8 +490,8 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 /* shine sweep on hover */
 .movie-card::before {
     content:''; position:absolute; top:0; left:-90%; width:55%; height:100%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);
-    transform:skewX(-12deg);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
+    transform:skewX(-17deg);
     transition:left .5s ease; z-index:2; pointer-events:none;
 }
 .movie-card:hover::before { left:160%; }
@@ -493,15 +500,15 @@ div[data-testid="stSelectbox"] > div > div:focus-within {
 .movie-card::after {
     content:''; position:absolute; inset:-1px; border-radius:6px;
     opacity:0; transition:opacity .3s ease; pointer-events:none; z-index:3;
-    background:linear-gradient(135deg,rgba(200,150,10,.10),rgba(0,229,255,.05));
-box-shadow:inset 0 0 0 1px rgba(200,150,10,.25);
+    background:linear-gradient(135deg,rgba(200,150,10,.10),rgba(0,229,255,0));
+    box-shadow:inset 0 0 0 1.5px rgba(200,150,10,.45);
 }
 .movie-card:hover::after { opacity:1; }
 .movie-card:hover {
-    border-color:rgba(200,150,10,.45);
-    box-shadow:0 20px 50px rgba(0,0,0,.70),0 0 22px rgba(200,150,10,.25)),
+    border-color:rgba(200,150,10,.45), rgba(0,229,255,.18);
+    box-shadow:0 20px 50px rgba(0,0,0,.90),0 0 22px rgba(200,150,10,.15),
                0 0 0 1px rgba(200,150,10,.18);
-    z-index:10;
+    z-index:5;
 }
 
 /* bottom accent bar */
@@ -548,6 +555,32 @@ box-shadow:inset 0 0 0 1px rgba(200,150,10,.25);
     font-family:'Barlow Condensed',sans-serif; font-size:.86rem;
     font-weight:700; color:var(--text); line-height:1.3;
     min-height:34px; text-align:center; letter-spacing:.3px;
+    transition:color .3s ease, text-shadow .3s ease;
+}
+.movie-card:hover .card-title {
+    color:var(--gold);
+    text-shadow:0 0 14px rgba(200,150,10,.6), 0 0 28px rgba(200,150,10,.2);
+}
+/* poster hover overlay */
+.card-poster-overlay {
+    position:absolute; inset:0; z-index:6;
+    background:rgba(0,0,0,0);
+    display:flex; align-items:center; justify-content:center;
+    transition:background .35s ease;
+    pointer-events:none;
+}
+.card-poster-overlay span {
+    font-family:'Bebas Neue',sans-serif; font-size:.85rem; letter-spacing:3px;
+    color:var(--gold); opacity:0;
+    transform:translateY(8px) scale(0.92);
+    transition:opacity .35s ease, transform .35s ease;
+    text-shadow:0 0 14px rgba(200,150,10,.7);
+    border:1px solid rgba(200,150,10,.45); border-radius:3px;
+    padding:4px 12px; background:rgba(0,0,0,.55); backdrop-filter:blur(2px);
+}
+.movie-card:hover .card-poster-overlay { background:rgba(0,0,0,.28); }
+.movie-card:hover .card-poster-overlay span {
+    opacity:1; transform:translateY(0) scale(1);
 }
 .card-rating {
     font-family:'Bebas Neue',sans-serif; font-size:.95rem; letter-spacing:1px;
@@ -917,6 +950,7 @@ except:
 TMDB_IMG    = "https://image.tmdb.org/t/p/w500"
 PLACEHOLDER = "https://placehold.co/500x750/06060f/1a1a2e?text=🎬"
 
+
 # ============================================================
 # DATA LOADING  (unchanged)
 # ============================================================
@@ -931,26 +965,59 @@ def load_p1():
         df['cast']   = df['cast'].apply(tl)
         df['crew']   = df['crew'].apply(tl)
         df['tags']   = df['tags'].fillna('')
-        tfidf  = TfidfVectorizer(max_features=5000, stop_words='english')
-        matrix = tfidf.fit_transform(df['tags'])
-        sim    = cosine_similarity(matrix, matrix)
+
+        # ── Fast path: load precomputed similarity matrix ──────────────────
+        # Run your notebook Cell 42 once → saves cosine_sim.pkl in data/
+        # That makes startup ~10x faster (load vs recompute).
+        sim = None
+        for pkl_path in ['data/cosine_sim.pkl', 'cosine_sim.pkl']:
+            if os.path.exists(pkl_path):
+                with open(pkl_path, 'rb') as f:
+                    sim = pickle.load(f)
+                break
+
+        # ── Slow path: recompute if pkl not found ──────────────────────────
+        if sim is None:
+            tfidf  = TfidfVectorizer(max_features=5000, stop_words='english')
+            matrix = tfidf.fit_transform(df['tags'])
+            sim    = cosine_similarity(matrix, matrix)
+            # Save for next startup
+            os.makedirs('data', exist_ok=True)
+            with open('data/cosine_sim.pkl', 'wb') as f:
+                pickle.dump(sim, f)
+
         return df, sim, True
-    except:
+    except Exception as e:
         return None, None, False
 
 @st.cache_data(show_spinner=False)
 def load_p2():
     try:
-        df = pd.read_csv("https://drive.google.com/uc?id=1QvmvfDxTjAbQxSdJBrutPkUNQuz4tviT")
+        df = pd.read_csv("https://drive.google.com/uc?id=1lGjsReuBySQI6unBPYJz4HNZSQTRkxyP")
         def tl(x):
             try: return ast.literal_eval(x)
             except: return []
         df['genres_list'] = df['genres_list'].apply(tl)
         df['tags']        = df['tags'].fillna('')
-        return df, True
+        return df, True 
     except:
         return None, False
 
+@st.cache_resource(show_spinner=False)
+def load_faiss():
+    try:
+        import faiss
+        # Download if not already present (only first run)
+        if not os.path.exists("faiss_index.bin"):
+            gdown.download("https://drive.google.com/uc?id=1swcbGt9wXs54TF3tRF4yZbtxUL9dP7pT", "faiss_index.bin")
+        if not os.path.exists("tfidf_normalized.npy"):
+            gdown.download("https://drive.google.com/uc?id=1XQkxSQnPGcMgngFyQxLtjkrEis4h4td9", "tfidf_normalized.npy")
+        
+        fi = faiss.read_index("faiss_index.bin")
+        fn = np.load("tfidf_normalized.npy")
+        return fi, fn, True
+    except:
+        return None, None, False
 # ============================================================
 # POSTER FUNCTIONS  (unchanged)
 # ============================================================
@@ -981,38 +1048,77 @@ def poster_p1(title, year=""):
 # RECOMMEND FUNCTIONS  (unchanged)
 # ============================================================
 def rec_p1(title, n, year_range, df, sim):
-    m = df[df['title'].str.lower() == title.lower()]
+    # Case-insensitive exact match first, then strip-match
+    m = df[df['title'].str.strip().str.lower() == title.strip().lower()]
     if m.empty: return None, None
     idx    = m.index[0]
-    scores = sorted(list(enumerate(sim[idx])), key=lambda x: x[1], reverse=True)[1:n+1]
+    scores = sorted(list(enumerate(sim[idx])), key=lambda x: x[1], reverse=True)[1:n*3+1]
     inds   = [i[0] for i in scores]
     res    = df.iloc[inds][['movie_id','title','weighted_rating','release_year','genres']].copy()
     res['similarity'] = [round(s[1], 3) for s in scores]
     res = res[(res['release_year'] >= year_range[0]) & (res['release_year'] <= year_range[1])]
+    res = res.head(n)
     res['poster'] = res.apply(
         lambda r: poster_p1(r['title'],
                             str(int(r['release_year'])) if pd.notna(r['release_year']) else ""),
         axis=1)
     return res, df.iloc[idx]
+
 def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
-    m = df[df['title'].str.lower() == title.lower()]
+    # Case-insensitive exact match first, then strip-match
+    m = df[df['title'].str.strip().str.lower() == title.strip().lower()]
     if m.empty: return None, None
-    midx        = m.index[0]
-    qv          = norm[midx:midx+1]
-    dists, inds = idx_faiss.search(qv, 150)
-    res = df.iloc[inds[0][1:]][
-        ['movie_id','title','weighted_rating','vote_count',
-         'release_date','genres_list','original_language','homepage',
-         'poster_path']
-    ].copy()
-    res['similarity'] = dists[0][1:].round(3)
-    res['year']       = pd.to_datetime(res['release_date'], errors='coerce').dt.year
+    midx = m.index[0]
+
+    if idx_faiss is not None and norm is not None:
+        # ── FAISS path (fast) ──────────────────────────────────────────────
+        qv          = norm[midx:midx+1].astype('float32')
+        dists, inds = idx_faiss.search(qv, min(200, idx_faiss.ntotal))
+        # inds[0][0] is the movie itself — skip it
+        valid_inds  = [i for i in inds[0] if i != midx and i >= 0]
+        valid_dists = []
+        for raw_i, raw_d in zip(inds[0], dists[0]):
+            if raw_i != midx and raw_i >= 0:
+                valid_dists.append(raw_d)
+        res = df.iloc[valid_inds][
+            ['movie_id','title','weighted_rating','vote_count',
+             'release_date','genres_list','original_language','homepage',
+             'poster_path']
+        ].copy()
+        res['similarity'] = [round(float(d), 3) for d in valid_dists[:len(res)]]
+    else:
+        # ── TF-IDF fallback when FAISS files not found ────────────────────
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity as cos_sim
+        tfidf  = TfidfVectorizer(max_features=10000, stop_words='english', sublinear_tf=True)
+        matrix = tfidf.fit_transform(df['tags'])
+        qv     = matrix[midx]
+        sims   = cos_sim(qv, matrix).flatten()
+        sims[midx] = 0  # exclude self
+        top_inds = sims.argsort()[::-1][:200]
+        res = df.iloc[top_inds][
+            ['movie_id','title','weighted_rating','vote_count',
+             'release_date','genres_list','original_language','homepage',
+             'poster_path']
+        ].copy()
+        res['similarity'] = [round(float(sims[i]), 3) for i in top_inds]
+
+    res['year'] = pd.to_datetime(res['release_date'], errors='coerce').dt.year
     res = res[res['vote_count'] >= min_votes]
     res = res[(res['year'] >= year_range[0]) & (res['year'] <= year_range[1])]
+    if len(res) == 0:
+        # Relax min_votes filter if nothing left
+        res = df.iloc[valid_inds if idx_faiss is not None else top_inds][
+            ['movie_id','title','weighted_rating','vote_count',
+             'release_date','genres_list','original_language','homepage','poster_path']
+        ].copy()
+        res['year'] = pd.to_datetime(res['release_date'], errors='coerce').dt.year
+        res['similarity'] = 0.0
+        res = res[(res['year'] >= year_range[0]) & (res['year'] <= year_range[1])]
     mv  = res['vote_count'].max() if len(res) > 0 else 1
     res['final_score'] = (res['similarity'] * 0.7 + res['vote_count'] / max(mv, 1) * 0.3)
     res = res.sort_values('final_score', ascending=False).head(n).reset_index(drop=True)
-    res['poster'] = res['homepage'+'poster_path'].apply(poster_p2)
+    res['poster'] = res['poster_path'].apply(poster_p2)
     return res, df.iloc[midx]
 
 # ============================================================
@@ -1021,25 +1127,31 @@ def rec_p2(title, n, min_votes, year_range, df, idx_faiss, norm):
 with st.spinner("INITIALISING NEURAL MATRIX..."):
     df1, sim1, ok1   = load_p1()
     df2, ok2         = load_p2()
-    fi, fn, ok_faiss = None, None, False
+    fi, fn, ok_faiss = load_faiss()
 
 # ============================================================
-# COMBINED TITLE LIST
+# COMBINED TITLE LIST  — preserve original casing for display
 # ============================================================
-searchable_titles = set()
+title_map = {}   # lower → original casing (first seen wins)
 if ok1:
-    searchable_titles.update(df1['title'].str.lower())
+    for t in df1['title'].dropna():
+        k = t.strip().lower()
+        if k not in title_map:
+            title_map[k] = t.strip()
 if ok2:
-    searchable_titles.update(df2['title'].str.lower())
-all_titles = sorted(searchable_titles)
+    for t in df2['title'].dropna():
+        k = t.strip().lower()
+        if k not in title_map:
+            title_map[k] = t.strip()
+
+all_titles = sorted(title_map.values(), key=lambda x: x.lower())
 
 # ============================================================
 # SIDEBAR
 # ============================================================
 with st.sidebar:
     st.markdown(
-        '<span class="sb-brand">⬡ CINEMATCH</span>'
-        '<div class="sb-ver">v2.0 &nbsp;·&nbsp; DUAL ENGINE</div>',
+        '<span class="sb-brand">CINEMATCH</span>',
         unsafe_allow_html=True)
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     st.markdown('<span class="sb-label">// RESULT COUNT</span>', unsafe_allow_html=True)
@@ -1047,7 +1159,7 @@ with st.sidebar:
                        label_visibility="collapsed")
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     st.markdown('<span class="sb-label">// RELEASE YEAR</span>', unsafe_allow_html=True)
-    year_range = st.slider("Year range", min_value=1950, max_value=2024,
+    year_range = st.slider("Year range", min_value=1990, max_value=2024,
                            value=(1990, 2024), step=1, label_visibility="collapsed")
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     st.markdown('<span class="sb-label">// QUALITY THRESHOLD</span>', unsafe_allow_html=True)
@@ -1055,7 +1167,7 @@ with st.sidebar:
                           value=500, step=100, label_visibility="collapsed")
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     e1c = "sb-status-on"  if ok1              else "sb-status-off"
-    e2c = "sb-status-off"
+    e2c = "sb-status-on"  if ok2 and ok_faiss else "sb-status-off"
     st.markdown(f"""
     <div class="sb-status-row">
         <div class="sb-status {e1c}">{'●' if ok1 else '○'} COSINE</div>
@@ -1096,14 +1208,14 @@ st.markdown("""
 s1, s2, s3, s4 = st.columns(4)
 for i, (col, num, lbl, clr, dl) in enumerate(zip(
     [s1,s2,s3,s4],
-    ["26K+","2","~2ms","20+"],
+    ["26K+","2","~2s","20+"],
     ["FILMS INDEXED","NEURAL ENGINES","SEARCH LATENCY","GENRES"],
     ["#E50914","#00e5ff","#bf00ff","#00ff9d"],
     ["0.0s","0.4s","0.8s","1.2s"]
 )):
     with col:
         st.markdown(f"""
-        <div class="stat-card sr" data-delay="{i*100}"
+        <div class="stat-card sr" data-delay="{i*10}"
              style="--sc:{clr};--sd:{dl}">
             <span class="stat-number" style="color:{clr};text-shadow:0 0 18px {clr}">{num}</span>
             <div class="stat-label">{lbl}</div>
@@ -1113,13 +1225,12 @@ for i, (col, num, lbl, clr, dl) in enumerate(zip(
 # SEARCH
 # ============================================================
 st.markdown('<div class="search-frame">', unsafe_allow_html=True)
-st.markdown('<div class="search-label">QUERY FILM DATABASE</div>', unsafe_allow_html=True)
+st.markdown('<div class="search-label"> SEARCH HERE </div>', unsafe_allow_html=True)
 sc1, sc2 = st.columns([4, 1])
 with sc1:
-    selected = st.selectbox("Search:", [""] + all_titles, index=0,
-                            label_visibility="collapsed")
+    selected = st.selectbox("Search:",[""] + all_titles, index=0,label_visibility="collapsed")
 with sc2:
-    btn = st.button("▶ SEARCH", use_container_width=True, type="primary")
+    btn = st.button(" ▶ SEARCH", use_container_width=True, type="primary")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================================
@@ -1137,16 +1248,21 @@ if st.session_state.last_movie:
 
     with st.spinner("SCANNING NEURAL DATABASE..."):
         res, src, eng = None, None, ""
-        if ok1 and sim1 is not None:
-            m = df1[df1['title'].str.lower() == movie.lower()]
+
+        # ── Phase 2 FIRST (26K films · FAISS = fastest) ───────────────────
+        if ok2:
+            m = df2[df2['title'].str.strip().str.lower() == movie.strip().lower()]
+            if not m.empty:
+                res, src = rec_p2(movie, n_recs, min_votes, year_range, df2, fi, fn)
+                eng = "phase2"
+
+        # ── Phase 1 fallback (4,800 films · cosine sim) ───────────────────
+        # Only runs if movie was not found in Phase 2 dataset
+        if (res is None or len(res) == 0) and ok1 and sim1 is not None:
+            m = df1[df1['title'].str.strip().str.lower() == movie.strip().lower()]
             if not m.empty:
                 res, src = rec_p1(movie, n_recs, year_range, df1, sim1)
                 eng = "phase1"
-        if res is None and ok2:
-            m = df2[df2['title'].str.lower() == movie.lower()]
-            if not m.empty:
-                #res, src = rec_p2(movie, n_recs, min_votes, year_range, df2, fi, fn)
-                eng = "phase2"
 
     if res is None or src is None:
         st.error(f"⚠  '{movie}' was not found in the database.")
@@ -1160,12 +1276,12 @@ if st.session_state.last_movie:
         </div>""", unsafe_allow_html=True)
 
         # ── SOURCE PANEL ──────────────────────────────────
-        st.markdown('<div class="source-panel sr" data-delay="60">', unsafe_allow_html=True)
+        st.markdown('<div class="source-panel sr" data-delay="20">', unsafe_allow_html=True)
         c1, c2 = st.columns([1, 4])
 
         with c1:
             if eng == "phase2":
-                p = poster_p2(src.get('homepage'+'poster_path', ''))
+                p = poster_p2(src.get('poster_path', ''))
             else:
                 try:
                     yr = str(int(src['release_year'])) if pd.notna(src['release_year']) else ""
@@ -1221,7 +1337,7 @@ if st.session_state.last_movie:
 
         # ── RECS DIVIDER ──────────────────────────────────
         st.markdown(f"""
-        <div class="recs-lead sr" data-delay="40">
+        <div class="recs-lead sr" data-delay="0">
             <div class="recs-lead-line"></div>
             <span class="recs-lead-count">{len(res)} FILMS MATCHED</span>
             <div class="recs-lead-line"
@@ -1257,22 +1373,19 @@ if st.session_state.last_movie:
                     delay_ms = row_i * 80 + col_i * 65
 
                     st.markdown(
-                        f"<div class='movie-card sr' data-delay='{delay_ms}'>",
-                        unsafe_allow_html=True)
-                    st.markdown(
+                        f"<div class='movie-card sr' data-delay='{delay_ms}'>"
                         f"<div class='card-poster-wrap'>"
                         f"<img src='{mv['poster']}' alt='{str(mv['title'])[:30]}'/>"
+                        f"<div class='card-poster-overlay'></div>"
                         f"</div>"
                         f"{b_html}"
-                        f"<div class='card-bar'></div>",
-                        unsafe_allow_html=True)
-                    st.markdown(
+                        f"<div class='card-bar'></div>"
                         f"<div class='card-info'>"
                         f"<div class='card-title'>{str(mv['title'])[:28]}</div>"
                         f"{r_html}{m_html}"
+                        f"</div>"
                         f"</div>",
                         unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
                     card_idx += 1
 
 # ============================================================
@@ -1282,10 +1395,9 @@ st.markdown("""
 <div class="genre-banner sr" data-delay="0" style="margin-top:52px">
     <div>
         <div class="genre-banner-title">🎭 TOP RATED BY GENRE</div>
-        <div class="genre-banner-sub">Curated from both databases · 26K+ titles</div>
     </div>
     <div class="genre-banner-line"></div>
-    <div class="genre-banner-badge">◈ BROWSE MODE</div>
+    <div class="genre-banner-badge">BROWSE MODE</div>
 </div>""", unsafe_allow_html=True)
 
 all_genres_set = set()
@@ -1296,25 +1408,24 @@ if ok2:
     for g in df2['genres_list']:
         if isinstance(g, list): all_genres_set.update(g)
 
-top_genres = sorted(all_genres_set)[:10]
+top_genres = sorted(all_genres_set)[:20]
 tabs       = st.tabs(top_genres)
+
+# Build a title → poster_path lookup from ALL of Phase 2 once (outside the loop)
+# This means genre cards never need OMDB — they always use TMDB poster_path
+p2_poster_map = {}
+if ok2:
+    for _, row in df2[['title','poster_path']].iterrows():
+        key = str(row['title']).strip().lower()
+        path = row.get('poster_path', '')
+        if path and str(path) not in ['nan', '', 'None']:
+            p2_poster_map[key] = poster_p2(path)
 
 for tab, genre in zip(tabs, top_genres):
     with tab:
         combined_movies = []
 
-        if ok1:
-            p1g = df1[df1['genres'].apply(
-                lambda x: genre in x if isinstance(x, list) else False
-            )].nlargest(20, 'weighted_rating')
-            for _, row in p1g.iterrows():
-                try:    yr = str(int(row['release_year'])) if pd.notna(row['release_year']) else ""
-                except: yr = ""
-                combined_movies.append({
-                    'title': row['title'], 'weighted_rating': row['weighted_rating'],
-                    'year': yr, 'poster': poster_p1(row['title'], yr), 'source': 'P1'
-                })
-
+        # ── Phase 2 first: has poster_path in CSV, zero API calls ────────
         if ok2:
             p2g = df2[df2['genres_list'].apply(
                 lambda x: genre in x if isinstance(x, list) else False
@@ -1324,12 +1435,32 @@ for tab, genre in zip(tabs, top_genres):
                 except: yr = ""
                 combined_movies.append({
                     'title': row['title'], 'weighted_rating': row['weighted_rating'],
-                    'year': yr, 'poster': poster_p2(row.get('homepage'+'poster_path', '')), 'source': 'P2'
+                    'year': yr, 'poster': poster_p2(row.get('poster_path', '')), 'source': 'P2'
+                })
+
+        # ── Phase 1: look up poster from p2_poster_map first (no API call)
+        #    Only fall back to OMDB if the movie truly doesn't exist in P2
+        if ok1:
+            p2_titles_in_tab = {str(m['title']).strip().lower() for m in combined_movies}
+            p1g = df1[df1['genres'].apply(
+                lambda x: genre in x if isinstance(x, list) else False
+            )].nlargest(20, 'weighted_rating')
+            for _, row in p1g.iterrows():
+                title_key = str(row['title']).strip().lower()
+                if title_key in p2_titles_in_tab:
+                    continue  # already have it from P2 with a good poster
+                try:    yr = str(int(row['release_year'])) if pd.notna(row['release_year']) else ""
+                except: yr = ""
+                # Use P2 poster map if available — avoids OMDB entirely
+                poster = p2_poster_map.get(title_key) or poster_p1(row['title'], yr)
+                combined_movies.append({
+                    'title': row['title'], 'weighted_rating': row['weighted_rating'],
+                    'year': yr, 'poster': poster, 'source': 'P1'
                 })
 
         combined_df = pd.DataFrame(combined_movies)
         if len(combined_df) > 0:
-            combined_df = combined_df.drop_duplicates(subset='title').nlargest(10, 'weighted_rating')
+            combined_df = combined_df.drop_duplicates(subset='title').nlargest(15, 'weighted_rating')
             cols = st.columns(5)
             for i, (_, mv) in enumerate(combined_df.iterrows()):
                 with cols[i % 5]:
@@ -1344,22 +1475,19 @@ for tab, genre in zip(tabs, top_genres):
                     delay_ms = (i % 5) * 65
 
                     st.markdown(
-                        f"<div class='movie-card sr' data-delay='{delay_ms}'>",
-                        unsafe_allow_html=True)
-                    st.markdown(
+                        f"<div class='movie-card sr' data-delay='{delay_ms}'>"
                         f"<div class='card-poster-wrap'>"
                         f"<img src='{mv['poster']}' alt='{str(mv['title'])[:22]}'/>"
+                        f"<div class='card-poster-overlay'></div>"
                         f"</div>"
                         f"{bh}"
-                        f"<div class='card-bar'></div>",
-                        unsafe_allow_html=True)
-                    st.markdown(
+                        f"<div class='card-bar'></div>"
                         f"<div class='card-info'>"
                         f"<div class='card-title'>{str(mv['title'])[:22]}</div>"
                         f"{rh}{yh}"
+                        f"</div>"
                         f"</div>",
                         unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================================
 # FOOTER
@@ -1373,7 +1501,7 @@ st.markdown("""
     </div>
     <div style="font-family:'Share Tech Mono',monospace;font-size:.58rem;
                 letter-spacing:3px;text-transform:uppercase;
-                color:var(--text-dim);opacity:.4;margin-top:5px">
+                color:var(--text-dim);opacity:.8;margin-top:5px">
         PHASE I · TF-IDF COSINE &nbsp;|&nbsp; PHASE II · TF-IDF + SVD + FAISS
     </div>
 </div>""", unsafe_allow_html=True)
